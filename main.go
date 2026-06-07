@@ -5,9 +5,11 @@ import (
 	"os"
 
 	"backend/config"
+	"backend/middleware"
 	"backend/routes"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -37,6 +39,10 @@ func main() {
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "Idempotency-Key"}
 	router.Use(cors.New(corsConfig))
+
+	// Register Global Middlewares
+	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	router.Use(middleware.SanitizeMiddleware())
 
 	// Register Routes
 	routes.RegisterAuthRoutes(router)

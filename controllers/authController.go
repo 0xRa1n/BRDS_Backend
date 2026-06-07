@@ -63,6 +63,11 @@ func VerifyOTP(c *gin.Context) {
 	}
 
 	// Main logic
+	if !config.AppCache.CheckRateLimit(req.PhoneNumber + "_verify") {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests. Please try again later."})
+		return
+	}
+
 	if !config.AppCache.VerifyOTP(req.PhoneNumber, req.Code) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired OTP"})
 		return

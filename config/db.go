@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"backend/models"
 
@@ -37,6 +38,14 @@ func InitDB() {
 	err = DB.AutoMigrate(&models.User{}, &models.DocumentRequest{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
+	}
+
+	// Setup Connection Pooling
+	sqlDB, err := DB.DB()
+	if err == nil {
+		sqlDB.SetMaxIdleConns(10)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 	}
 
 	log.Println("Database connection established and models migrated.")
