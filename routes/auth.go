@@ -10,8 +10,8 @@ import (
 func RegisterAuthRoutes(router *gin.Engine) {
 	authGroup := router.Group("/api/v1/auth")
 	{
-		authGroup.POST("/otp/send", controllers.SendOTP)
-		authGroup.POST("/otp/verify", controllers.VerifyOTP)
+		authGroup.POST("/send-otp", controllers.SendOTP)
+		authGroup.POST("/verify-otp", controllers.VerifyOTP)
 		authGroup.POST("/logout", controllers.Logout)
 	}
 }

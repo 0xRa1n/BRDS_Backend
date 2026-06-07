@@ -15,24 +15,13 @@ var DB *gorm.DB
 
 func InitDB() {
 	host := os.Getenv("DB_HOST")
-	if host == "" {
-		host = "localhost"
-	}
 	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = "postgres"
-	}
 	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		password = "password"
-	}
 	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		dbname = "barangay_db"
-	}
 	port := os.Getenv("DB_PORT")
-	if port == "" {
-		port = "5432"
+
+	if host == "" || user == "" || password == "" || dbname == "" || port == "" {
+		log.Fatal("Missing required database environment variables")
 	}
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Manila",
@@ -44,8 +33,8 @@ func InitDB() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto Migrate the Resident model
-	err = DB.AutoMigrate(&models.Resident{})
+	// Auto Migrate the User model
+	err = DB.AutoMigrate(&models.User{}, &models.DocumentRequest{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}

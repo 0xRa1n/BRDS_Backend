@@ -13,6 +13,8 @@ import (
 	"backend/services"
 	"backend/utils"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +26,7 @@ func generateOTP() string {
 
 // SendOTP handles sending the OTP
 func SendOTP(c *gin.Context) {
+	// payload: { phone_number: "" }
 	var req models.OTPSendRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
@@ -41,6 +44,8 @@ func SendOTP(c *gin.Context) {
 
 	err := services.SendSMS(req.PhoneNumber, code)
 	if err != nil {
+		// print the error
+		log.Println("Send SMS: " + err.Error());
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP SMS"})
 		return
 	}
@@ -50,6 +55,7 @@ func SendOTP(c *gin.Context) {
 
 // VerifyOTP handles OTP validation and resident upsert
 func VerifyOTP(c *gin.Context) {
+	// payload: { phoneNumber: "", code: "", fullName: "", address: "", dateOfBirth: "" }
 	var req models.OTPVerifyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
@@ -62,31 +68,19 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	var resident models.Resident
-	res := config.DB.Where("phone_number = ?", req.PhoneNumber).First(&resident)
+	var user models.User
+	res := config.DB.Where("phone_number = ?", req.PhoneNumber).First(&user)
 
-	// If resident doesn't exist, create it. Otherwise, update it.
-	resident.PhoneNumber = req.PhoneNumber
-	if req.FullName != "" {
-		resident.FullName = req.FullName
-	}
-	if req.Address != "" {
-		resident.Address = req.Address
-	}
-	if req.DateOfBirth != "" {
-		parsedDate, err := time.Parse("2006-01-02", req.DateOfBirth)
-		if err == nil {
-			resident.DateOfBirth = parsedDate
-		}
-	}
+	// If user doesn't exist, create it. Otherwise, update it.
+	user.PhoneNumber = req.PhoneNumber
 
 	if res.Error != nil {
-		config.DB.Create(&resident)
+		config.DB.Create(&user)
 	} else {
-		config.DB.Save(&resident)
+		config.DB.Save(&user)
 	}
 
-	token, err := utils.GenerateJWT(resident.PhoneNumber)
+	token, err := utils.GenerateJWT(user.PhoneNumber)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
