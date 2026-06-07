@@ -35,5 +35,5 @@ type AuthResponse struct {
 type ProfileUpdateRequest struct {
 	FullName    string `json:"full_name" binding:"required"`
 	Address     string `json:"address" binding:"required"`
-	DateOfBirth string `json:"date_of_birth" binding:"required"`
+	DateOfBirth string `json:"date_of_birth"`
 }

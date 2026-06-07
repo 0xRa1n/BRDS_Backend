@@ -121,16 +121,23 @@ func GetRequests(c *gin.Context) {
 
 	// We could implement pagination here, but for now let's just fetch all or recent ones
 	// Since the frontend sends ?page=X&limit=Y, we can use it
-	page := c.DefaultQuery("page", "1")
-	limit := c.DefaultQuery("limit", "10")
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
 	
-	// Quick manual conversion for page/limit for simplicity, or just order by desc
-	// Real prod code would parse strings to ints, but let's just do a basic fetch for now
-	// to get the system working
+	// Convert strings to ints safely
+	var page, limit int
+	fmt.Sscanf(pageStr, "%d", &page)
+	fmt.Sscanf(limitStr, "%d", &limit)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
 	
-	// Wait, actually let's just fetch the 50 most recent to keep it simple, or implement limit
+	offset := (page - 1) * limit
 	
-	if err := config.DB.Where("user_id = ?", user.ID).Order("created_at desc").Limit(50).Find(&requests).Error; err != nil {
+	if err := config.DB.Where("user_id = ?", user.ID).Order("created_at desc").Offset(offset).Limit(limit).Find(&requests).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch requests"})
 		return
 	}
