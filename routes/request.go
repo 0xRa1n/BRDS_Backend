@@ -13,5 +13,6 @@ func RegisterRequestRoutes(router *gin.Engine) {
 	reqGroup.Use(middleware.AuthRequired())
 	{
 		reqGroup.POST("", controllers.SubmitRequest)
+		reqGroup.GET("", controllers.GetRequests)
 	}
 }
