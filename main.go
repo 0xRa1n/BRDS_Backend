@@ -48,6 +48,7 @@ func main() {
 	routes.RegisterAuthRoutes(router)
 	routes.RegisterUserRoutes(router)
 	routes.RegisterRequestRoutes(router)
+	routes.RegisterAdminRoutes(router)
 
 	// Start the Server
 	port := os.Getenv("PORT")

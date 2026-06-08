@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var DB *gorm.DB
@@ -34,11 +35,13 @@ func InitDB() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto Migrate the User model
-	err = DB.AutoMigrate(&models.User{}, &models.DocumentRequest{})
+	// Auto Migrate the models
+	err = DB.AutoMigrate(&models.User{}, &models.DocumentRequest{}, &models.Admin{})
 	if err != nil {
 		log.Fatalf("Failed to auto-migrate database: %v", err)
 	}
+
+	seedAdmin()
 
 	// Setup Connection Pooling
 	sqlDB, err := DB.DB()
@@ -49,4 +52,26 @@ func InitDB() {
 	}
 
 	log.Println("Database connection established and models migrated.")
+}
+
+func seedAdmin() {
+	var count int64
+	DB.Model(&models.Admin{}).Count(&count)
+	if count == 0 {
+		passwordHash, err := bcrypt.GenerateFromPassword([]byte("123"), bcrypt.DefaultCost)
+		if err != nil {
+			log.Fatalf("Failed to hash default admin password: %v", err)
+		}
+
+		admin := models.Admin{
+			Username:     "staff",
+			PasswordHash: string(passwordHash),
+			Role:         "staff",
+		}
+		
+		if err := DB.Create(&admin).Error; err != nil {
+			log.Fatalf("Failed to seed default admin: %v", err)
+		}
+		log.Println("Default staff admin account seeded.")
+	}
 }

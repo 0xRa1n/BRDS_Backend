@@ -34,6 +34,21 @@ func GenerateJWT(phoneNumber string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
+// GenerateAdminJWT generates a JWT for an admin or staff member
+func GenerateAdminJWT(username, role string) (string, error) {
+	jti := uuid.New().String()
+
+	claims := jwt.MapClaims{
+		"username": username,
+		"role":     role,
+		"jti":      jti,
+		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}
+
 // ExtractJWTClaims parses the token and returns its claims
 func ExtractJWTClaims(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
