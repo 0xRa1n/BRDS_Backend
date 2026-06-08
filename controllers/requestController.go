@@ -149,3 +149,16 @@ func GetRequests(c *gin.Context) {
 		"limit": limit,
 	})
 }
+
+// TrackRequest fetches a document request by reference number for public tracking
+func TrackRequest(c *gin.Context) {
+	reference := c.Param("reference")
+	var req models.DocumentRequest
+
+	if err := config.DB.Where("reference_number = ?", reference).First(&req).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": req})
+}
