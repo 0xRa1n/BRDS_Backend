@@ -267,7 +267,9 @@ func AdminSetAppointment(c *gin.Context) {
 
 	// Send SMS to user
 	if req.User.PhoneNumber != "" {
-		dateStr := payload.AppointmentDate.Format("Jan 02, 2006 at 03:04 PM")
+		// Convert to Philippine Time (UTC+8) before formatting to avoid UTC 12:00 AM bug
+		loc := time.FixedZone("PHT", 8*60*60)
+		dateStr := payload.AppointmentDate.In(loc).Format("Jan 02, 2006 at 03:04 PM")
 		message := fmt.Sprintf("Hi %s, your appointment for %s is confirmed for %s. Ref: %s", req.User.FullName, req.DocumentType, dateStr, req.ReferenceNumber)
 		// Fire and forget SMS or handle error
 		go func() {

@@ -11,6 +11,7 @@ type DocumentRequest struct {
 	ReferenceNumber string `json:"reference_number" gorm:"uniqueIndex;not null"`
 	UserID          uint   `json:"user_id" gorm:"index;not null"`
 	User            User   `json:"user" gorm:"foreignKey:UserID"`
+	Address         string `json:"address" gorm:"not null;default:''"`
 	DocumentType    string `json:"document_type" gorm:"not null"`
 	Purpose         string `json:"purpose" gorm:"not null"`
 	Status          string     `json:"status" gorm:"not null;default:'Pending'"`

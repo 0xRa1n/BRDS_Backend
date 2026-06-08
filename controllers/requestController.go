@@ -82,6 +82,7 @@ func SubmitRequest(c *gin.Context) {
 	docReq := models.DocumentRequest{
 		ReferenceNumber: generateReferenceNumber(),
 		UserID:          user.ID,
+		Address:         payload.Address,
 		DocumentType:    payload.DocumentType,
 		Purpose:         payload.Purpose,
 		Status:          "Pending",
