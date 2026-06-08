@@ -55,23 +55,54 @@ func InitDB() {
 }
 
 func seedAdmin() {
-	var count int64
-	DB.Model(&models.Admin{}).Count(&count)
-	if count == 0 {
-		passwordHash, err := bcrypt.GenerateFromPassword([]byte("123"), bcrypt.DefaultCost)
-		if err != nil {
-			log.Fatalf("Failed to hash default admin password: %v", err)
-		}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte("123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Failed to hash default admin password: %v", err)
+	}
 
-		admin := models.Admin{
-			Username:     "staff",
+	var adminCount int64
+	DB.Model(&models.Admin{}).Where("username = ?", "admin").Count(&adminCount)
+	if adminCount == 0 {
+		adminAcc := models.Admin{
+			UniqueID:     "ADM-01",
+			FullName:     "System Administrator",
+			Username:     "admin",
 			PasswordHash: string(passwordHash),
-			Role:         "staff",
+			Role:         "Admin",
+			Status:       "Active",
+			LoginHistory: []time.Time{},
 		}
 		
-		if err := DB.Create(&admin).Error; err != nil {
+		if err := DB.Create(&adminAcc).Error; err != nil {
 			log.Fatalf("Failed to seed default admin: %v", err)
 		}
-		log.Println("Default staff admin account seeded.")
+		log.Println("Default admin account seeded.")
+	}
+
+	var staffCount int64
+	DB.Model(&models.Admin{}).Where("username = ?", "staff").Count(&staffCount)
+	if staffCount == 0 {
+		staffAcc := models.Admin{
+			UniqueID:     "DEF-STAFF-01",
+			FullName:     "Default Staff",
+			Username:     "staff",
+			PasswordHash: string(passwordHash),
+			Role:         "Staff",
+			Status:       "Active",
+			LoginHistory: []time.Time{},
+		}
+		
+		if err := DB.Create(&staffAcc).Error; err != nil {
+			log.Fatalf("Failed to seed default staff: %v", err)
+		}
+		log.Println("Default staff account seeded.")
+	} else {
+		// Update existing staff account that might have null fields from previous schema
+		DB.Model(&models.Admin{}).Where("username = ?", "staff").Updates(map[string]interface{}{
+			"unique_id": "DEF-STAFF-01",
+			"full_name": "Default Staff",
+			"role":      "Staff",
+			"status":    "Active",
+		})
 	}
 }

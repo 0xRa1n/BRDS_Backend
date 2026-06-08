@@ -21,4 +21,14 @@ func RegisterAdminRoutes(router *gin.Engine) {
 		protectedAdminGroup.GET("/requests", controllers.AdminGetAllRequests)
 		protectedAdminGroup.POST("/requests", controllers.AdminCreateRequest)
 	}
+
+	// Super Admin routes
+	superAdminGroup := adminGroup.Group("/users")
+	superAdminGroup.Use(middleware.SuperAdminAuthRequired())
+	{
+		superAdminGroup.GET("", controllers.AdminGetUsers)
+		superAdminGroup.POST("", controllers.AdminCreateUser)
+		superAdminGroup.PUT("/:id", controllers.AdminUpdateUser)
+		superAdminGroup.DELETE("/:id", controllers.AdminDeleteUser)
+	}
 }
