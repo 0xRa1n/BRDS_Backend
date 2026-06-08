@@ -20,6 +20,9 @@ func RegisterAdminRoutes(router *gin.Engine) {
 	{
 		protectedAdminGroup.GET("/requests", controllers.AdminGetAllRequests)
 		protectedAdminGroup.POST("/requests", controllers.AdminCreateRequest)
+		protectedAdminGroup.GET("/requests/:id", controllers.AdminGetRequest)
+		protectedAdminGroup.PUT("/requests/:id/status", controllers.AdminUpdateStatus)
+		protectedAdminGroup.PUT("/requests/:id/appointment", controllers.AdminSetAppointment)
 	}
 
 	// Super Admin routes

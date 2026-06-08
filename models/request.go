@@ -1,6 +1,7 @@
 package models
 
 import (
+	"time"
 	"gorm.io/gorm"
 )
 
@@ -12,8 +13,10 @@ type DocumentRequest struct {
 	User            User   `json:"user" gorm:"foreignKey:UserID"`
 	DocumentType    string `json:"document_type" gorm:"not null"`
 	Purpose         string `json:"purpose" gorm:"not null"`
-	Status          string `json:"status" gorm:"not null;default:'Pending'"`
-	IdempotencyKey  string `json:"idempotency_key" gorm:"uniqueIndex"`
+	Status          string     `json:"status" gorm:"not null;default:'Pending'"`
+	Remarks         string     `json:"remarks"`
+	IdempotencyKey  string     `json:"idempotency_key" gorm:"uniqueIndex"`
+	AppointmentDate *time.Time `json:"appointment_date"`
 }
 
 // SubmitRequestPayload represents the payload from the frontend for submitting a request

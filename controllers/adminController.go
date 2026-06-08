@@ -8,6 +8,7 @@ import (
 
 	"backend/config"
 	"backend/models"
+	"backend/services"
 	"backend/utils"
 
 	"github.com/gin-gonic/gin"
@@ -232,5 +233,104 @@ func AdminCreateRequest(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message":          "Request created successfully",
 		"reference_number": req.ReferenceNumber,
+	})
+}
+
+// AdminSetAppointmentPayload represents the payload for setting an appointment
+type AdminSetAppointmentPayload struct {
+	AppointmentDate time.Time `json:"appointment_date" binding:"required"`
+}
+
+// AdminSetAppointment sets the appointment date for a document request
+func AdminSetAppointment(c *gin.Context) {
+	id := c.Param("id")
+	var req models.DocumentRequest
+
+	if err := config.DB.Preload("User").First(&req, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
+		return
+	}
+
+	var payload AdminSetAppointmentPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload format"})
+		return
+	}
+
+	req.AppointmentDate = &payload.AppointmentDate
+	req.Status = "Confirmed"
+
+	if err := config.DB.Save(&req).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request appointment"})
+		return
+	}
+
+	// Send SMS to user
+	if req.User.PhoneNumber != "" {
+		dateStr := payload.AppointmentDate.Format("Jan 02, 2006 at 03:04 PM")
+		message := fmt.Sprintf("Hi %s, your appointment for %s is confirmed for %s. Ref: %s", req.User.FullName, req.DocumentType, dateStr, req.ReferenceNumber)
+		// Fire and forget SMS or handle error
+		go func() {
+			err := services.SendCustomSMS(req.User.PhoneNumber, message)
+			if err != nil {
+				fmt.Println("Failed to send appointment SMS:", err)
+			}
+		}()
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Appointment scheduled successfully",
+		"data":    req,
+	})
+}
+
+// AdminGetRequest fetches a single document request by ID
+func AdminGetRequest(c *gin.Context) {
+	id := c.Param("id")
+	var req models.DocumentRequest
+
+	if err := config.DB.Preload("User").First(&req, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": req})
+}
+
+// AdminUpdateStatusPayload represents the payload for updating request status
+type AdminUpdateStatusPayload struct {
+	Status  string `json:"status" binding:"required"`
+	Remarks string `json:"remarks"`
+}
+
+// AdminUpdateStatus updates the status of a document request
+func AdminUpdateStatus(c *gin.Context) {
+	id := c.Param("id")
+	var req models.DocumentRequest
+
+	if err := config.DB.Preload("User").First(&req, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Request not found"})
+		return
+	}
+
+	var payload AdminUpdateStatusPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload format"})
+		return
+	}
+
+	req.Status = html.EscapeString(payload.Status)
+	if payload.Remarks != "" {
+		req.Remarks = html.EscapeString(payload.Remarks)
+	}
+
+	if err := config.DB.Save(&req).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Status updated successfully",
+		"data":    req,
 	})
 }

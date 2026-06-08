@@ -35,3 +35,30 @@ func SendSMS(to string, code string) error {
 
 	return nil
 }
+
+// SendCustomSMS sends a custom message to a given phone number via Twilio
+func SendCustomSMS(to string, message string) error {
+	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
+	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	fromNumber := os.Getenv("TWILIO_PHONE_NUMBER")
+
+	if accountSid == "" || authToken == "" {
+		log.Println("Twilio credentials not set, mocking SMS send")
+		log.Printf("MOCK SMS to %s: %s\n", to, message)
+		return nil
+	}
+
+	client := twilio.NewRestClient()
+
+	params := &openapi.CreateMessageParams{}
+	params.SetTo(to)
+	params.SetFrom(fromNumber)
+	params.SetBody(message)
+
+	_, err := client.Api.CreateMessage(params)
+	if err != nil {
+		return fmt.Errorf("failed to send SMS: %v", err)
+	}
+
+	return nil
+}
