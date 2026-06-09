@@ -70,7 +70,6 @@ type AdminCreateUserPayload struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Role     string `json:"role" binding:"required"`
-	Status   string `json:"status" binding:"required"`
 }
 
 // AdminCreateUser creates a new admin or staff user
@@ -93,7 +92,6 @@ func AdminCreateUser(c *gin.Context) {
 		Username:     html.EscapeString(payload.Username),
 		PasswordHash: string(passwordHash),
 		Role:         html.EscapeString(payload.Role),
-		Status:       html.EscapeString(payload.Status),
 		LoginHistory: []time.Time{},
 	}
 
@@ -111,7 +109,6 @@ type AdminUpdateUserPayload struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password"` // Optional, only update if provided
 	Role     string `json:"role" binding:"required"`
-	Status   string `json:"status" binding:"required"`
 }
 
 // AdminUpdateUser updates an existing admin or staff user
@@ -133,7 +130,6 @@ func AdminUpdateUser(c *gin.Context) {
 	admin.FullName = html.EscapeString(payload.FullName)
 	admin.Username = html.EscapeString(payload.Username)
 	admin.Role = html.EscapeString(payload.Role)
-	admin.Status = html.EscapeString(payload.Status)
 
 	if payload.Password != "" {
 		passwordHash, err := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)

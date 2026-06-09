@@ -26,12 +26,26 @@ func RegisterAdminRoutes(router *gin.Engine) {
 	}
 
 	// Super Admin routes
-	superAdminGroup := adminGroup.Group("/users")
-	superAdminGroup.Use(middleware.SuperAdminAuthRequired())
+	superAdminRoot := adminGroup.Group("/")
+	superAdminRoot.Use(middleware.SuperAdminAuthRequired())
 	{
-		superAdminGroup.GET("", controllers.AdminGetUsers)
-		superAdminGroup.POST("", controllers.AdminCreateUser)
-		superAdminGroup.PUT("/:id", controllers.AdminUpdateUser)
-		superAdminGroup.DELETE("/:id", controllers.AdminDeleteUser)
+		usersGroup := superAdminRoot.Group("/users")
+		{
+			usersGroup.GET("", controllers.AdminGetUsers)
+			usersGroup.POST("", controllers.AdminCreateUser)
+			usersGroup.PUT("/:id", controllers.AdminUpdateUser)
+			usersGroup.DELETE("/:id", controllers.AdminDeleteUser)
+		}
+
+		// Portal Users
+		superAdminRoot.GET("/portal-users", controllers.AdminGetPortalUsers)
+		superAdminRoot.PUT("/portal-users/:id", controllers.AdminUpdatePortalUser)
+		superAdminRoot.DELETE("/portal-users/:id", controllers.AdminDeletePortalUser)
+
+		// Archives
+		superAdminRoot.GET("/archives/users", controllers.AdminGetArchivedAdmins)
+		superAdminRoot.POST("/archives/users/:id/recover", controllers.AdminRecoverAdmin)
+		superAdminRoot.GET("/archives/portal-users", controllers.AdminGetArchivedPortalUsers)
+		superAdminRoot.POST("/archives/portal-users/:id/recover", controllers.AdminRecoverPortalUser)
 	}
 }

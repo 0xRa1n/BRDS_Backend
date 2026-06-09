@@ -14,7 +14,6 @@ type Admin struct {
 	Username     string      `json:"username" gorm:"uniqueIndex;not null"`
 	PasswordHash string      `json:"-" gorm:"not null"`
 	Role         string      `json:"role" gorm:"not null;default:'Staff'"` // Admin or Staff
-	Status       string      `json:"status" gorm:"not null;default:'Active'"`
 	LoginHistory []time.Time `json:"loginHistory" gorm:"serializer:json"`
 }
 
