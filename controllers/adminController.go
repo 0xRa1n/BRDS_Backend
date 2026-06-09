@@ -45,6 +45,8 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("admin_token", token, 3600*24*7, "/", "", false, true)
+
 	c.JSON(http.StatusOK, models.AdminLoginResponse{
 		Token:    token,
 		Role:     admin.Role,
@@ -199,8 +201,8 @@ func AdminCreateRequest(c *gin.Context) {
 	if err := config.DB.Where("phone_number = ?", payload.ContactNumber).First(&user).Error; err != nil {
 		// User not found, create new
 		user = models.User{
-			PhoneNumber: payload.ContactNumber,
-			FullName:    payload.FullName,
+			PhoneNumber: html.EscapeString(payload.ContactNumber),
+			FullName:    html.EscapeString(payload.FullName),
 		}
 		if err := config.DB.Create(&user).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -209,7 +211,7 @@ func AdminCreateRequest(c *gin.Context) {
 	} else {
 		// Update name if different
 		if user.FullName == "" || user.FullName != payload.FullName {
-			user.FullName = payload.FullName
+			user.FullName = html.EscapeString(payload.FullName)
 			config.DB.Save(&user)
 		}
 	}
@@ -220,8 +222,8 @@ func AdminCreateRequest(c *gin.Context) {
 	req := models.DocumentRequest{
 		ReferenceNumber: refNum,
 		UserID:          user.ID,
-		DocumentType:    payload.DocumentType,
-		Purpose:         payload.Purpose,
+		DocumentType:    html.EscapeString(payload.DocumentType),
+		Purpose:         html.EscapeString(payload.Purpose),
 		Status:          "Pending",
 	}
 
@@ -301,8 +303,9 @@ func AdminGetRequest(c *gin.Context) {
 
 // AdminUpdateStatusPayload represents the payload for updating request status
 type AdminUpdateStatusPayload struct {
-	Status  string `json:"status" binding:"required"`
-	Remarks string `json:"remarks"`
+	Status       string `json:"status" binding:"required"`
+	Remarks      string `json:"remarks"`
+	DocumentType string `json:"document_type"`
 }
 
 // AdminUpdateStatus updates the status of a document request
@@ -324,6 +327,9 @@ func AdminUpdateStatus(c *gin.Context) {
 	req.Status = html.EscapeString(payload.Status)
 	if payload.Remarks != "" {
 		req.Remarks = html.EscapeString(payload.Remarks)
+	}
+	if payload.DocumentType != "" {
+		req.DocumentType = html.EscapeString(payload.DocumentType)
 	}
 
 	if err := config.DB.Save(&req).Error; err != nil {

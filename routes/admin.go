@@ -9,7 +9,7 @@ import (
 
 // RegisterAdminRoutes sets up endpoints for admin/staff functionality
 func RegisterAdminRoutes(router *gin.Engine) {
-	adminGroup := router.Group("/api/admin")
+	adminGroup := router.Group("/api/v1/admin")
 	
 	// Public admin route for login
 	adminGroup.POST("/login", controllers.AdminLogin)

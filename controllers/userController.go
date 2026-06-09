@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"html"
 	"net/http"
 	"time"
 
@@ -47,8 +48,8 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	user.FullName = req.FullName
-	user.Address = req.Address
+	user.FullName = html.EscapeString(req.FullName)
+	user.Address = html.EscapeString(req.Address)
 
 	parsedDate, err := time.Parse("2006-01-02", req.DateOfBirth)
 	if err == nil {

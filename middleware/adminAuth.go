@@ -13,13 +13,11 @@ import (
 // AdminAuthRequired is a middleware to protect routes requiring staff/admin privileges
 func AdminAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+		tokenString, err := c.Cookie("admin_token")
+		if err != nil || tokenString == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization cookie required"})
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := utils.ExtractJWTClaims(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
@@ -50,13 +48,11 @@ func AdminAuthRequired() gin.HandlerFunc {
 // SuperAdminAuthRequired protects routes that require strict Admin privileges
 func SuperAdminAuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+		tokenString, err := c.Cookie("admin_token")
+		if err != nil || tokenString == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization cookie required"})
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := utils.ExtractJWTClaims(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})

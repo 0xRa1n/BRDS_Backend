@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 	"time"
@@ -68,8 +69,8 @@ func SubmitRequest(c *gin.Context) {
 	}
 
 	// Update user profile with submitted details
-	user.FullName = payload.FullName
-	user.Address = payload.Address
+	user.FullName = html.EscapeString(payload.FullName)
+	user.Address = html.EscapeString(payload.Address)
 
 	parsedDate, err := time.Parse("2006-01-02", payload.DateOfBirth)
 	if err == nil {
@@ -82,9 +83,9 @@ func SubmitRequest(c *gin.Context) {
 	docReq := models.DocumentRequest{
 		ReferenceNumber: generateReferenceNumber(),
 		UserID:          user.ID,
-		Address:         payload.Address,
-		DocumentType:    payload.DocumentType,
-		Purpose:         payload.Purpose,
+		Address:         html.EscapeString(payload.Address),
+		DocumentType:    html.EscapeString(payload.DocumentType),
+		Purpose:         html.EscapeString(payload.Purpose),
 		Status:          "Pending",
 		IdempotencyKey:  idempotencyKey,
 	}

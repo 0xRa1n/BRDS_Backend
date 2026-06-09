@@ -38,6 +38,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"http://localhost:5173"} // Adjust depending on frontend port
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "Idempotency-Key"}
+	corsConfig.AllowCredentials = true
 	router.Use(cors.New(corsConfig))
 
 	// Register Global Middlewares

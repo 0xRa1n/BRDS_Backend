@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	"strings"
 	"time"
 
 	"backend/config"
@@ -91,19 +90,18 @@ func VerifyOTP(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("jwt_token", token, 3600*24*7, "/", "", false, true)
 	c.JSON(http.StatusOK, models.AuthResponse{Token: token})
 }
 
 // Logout handles JWT blocklisting
 func Logout(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or invalid Authorization header"})
+	tokenString, err := c.Cookie("jwt_token")
+	if err != nil || tokenString == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or invalid cookie"})
 		return
 	}
 
-	// Main logic
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	claims, err := utils.ExtractJWTClaims(tokenString)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
@@ -115,6 +113,7 @@ func Logout(c *gin.Context) {
 	expiresAt := time.Unix(int64(expF), 0)
 
 	config.AppCache.BlockJWT(jti, expiresAt)
+	c.SetCookie("jwt_token", "", -1, "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

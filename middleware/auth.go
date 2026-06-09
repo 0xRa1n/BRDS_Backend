@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"backend/config"
 	"backend/utils"
@@ -13,13 +12,11 @@ import (
 // AuthRequired is a middleware to protect routes requiring JWT authentication
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+		tokenString, err := c.Cookie("jwt_token")
+		if err != nil || tokenString == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization cookie required"})
 			return
 		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := utils.ExtractJWTClaims(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
