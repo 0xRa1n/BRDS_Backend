@@ -45,7 +45,6 @@ func TestCRUDOperations(t *testing.T) {
 	config.DB.Create(&models.User{PhoneNumber: testPhone})
 
 	token, _ := utils.GenerateJWT(testPhone)
-	authHeader := "Bearer " + token
 
 	// 1. Test Update Profile
 	t.Run("Update Profile", func(t *testing.T) {
@@ -56,7 +55,7 @@ func TestCRUDOperations(t *testing.T) {
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("PUT", "/api/v1/user/profile", bytes.NewBuffer(body))
-		req.Header.Set("Authorization", authHeader)
+		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 		req.Header.Set("Content-Type", "application/json")
 
 		w := httptest.NewRecorder()
@@ -76,7 +75,7 @@ func TestCRUDOperations(t *testing.T) {
 	// 2. Test Get Profile
 	t.Run("Get Profile", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v1/user/profile", nil)
-		req.Header.Set("Authorization", authHeader)
+		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -98,7 +97,7 @@ func TestCRUDOperations(t *testing.T) {
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", "/api/v1/request", bytes.NewBuffer(body))
-		req.Header.Set("Authorization", authHeader)
+		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 		req.Header.Set("Content-Type", "application/json")
 
 		w := httptest.NewRecorder()
@@ -118,7 +117,7 @@ func TestCRUDOperations(t *testing.T) {
 	// 4. Test Get Document Requests
 	t.Run("Get Requests", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v1/request", nil)
-		req.Header.Set("Authorization", authHeader)
+		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
