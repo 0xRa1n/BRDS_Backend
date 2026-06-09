@@ -69,7 +69,6 @@ func seedAdmin() {
 			Username:     "admin",
 			PasswordHash: string(passwordHash),
 			Role:         "Admin",
-			Status:       "Active",
 			LoginHistory: []time.Time{},
 		}
 		
@@ -88,7 +87,6 @@ func seedAdmin() {
 			Username:     "staff",
 			PasswordHash: string(passwordHash),
 			Role:         "Staff",
-			Status:       "Active",
 			LoginHistory: []time.Time{},
 		}
 		

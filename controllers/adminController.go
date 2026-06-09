@@ -54,8 +54,20 @@ func AdminLogin(c *gin.Context) {
 	})
 }
 
-// AdminGetUsers fetches all admin/staff users
+// AdminGetUsers fetches all admin/staff users or portal users depending on type
 func AdminGetUsers(c *gin.Context) {
+	userType := c.Query("type")
+
+	if userType == "users" {
+		var portalUsers []models.User
+		if err := config.DB.Order("created_at desc").Find(&portalUsers).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch portal users"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": portalUsers})
+		return
+	}
+
 	var admins []models.Admin
 	if err := config.DB.Order("created_at desc").Find(&admins).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
@@ -111,9 +123,52 @@ type AdminUpdateUserPayload struct {
 	Role     string `json:"role" binding:"required"`
 }
 
-// AdminUpdateUser updates an existing admin or staff user
+// AdminUpdatePortalUserPayload represents the payload for updating a portal user
+type AdminUpdatePortalUserPayload struct {
+	FullName    string `json:"fullName" binding:"required"`
+	PhoneNumber string `json:"phoneNumber" binding:"required"`
+	Address     string `json:"address" binding:"required"`
+	DateOfBirth string `json:"dateOfBirth" binding:"required"`
+}
+
+// AdminUpdateUser updates an existing user
 func AdminUpdateUser(c *gin.Context) {
 	id := c.Param("id")
+	userType := c.Query("type")
+
+	if userType == "users" {
+		var user models.User
+		if err := config.DB.First(&user, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+
+		var payload AdminUpdatePortalUserPayload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload format"})
+			return
+		}
+
+		dob, err := time.Parse("2006-01-02", payload.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+			return
+		}
+
+		user.FullName = payload.FullName
+		user.PhoneNumber = payload.PhoneNumber
+		user.Address = payload.Address
+		user.DateOfBirth = dob
+
+		if err := config.DB.Save(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update portal user"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
+		return
+	}
+
 	var admin models.Admin
 
 	if err := config.DB.First(&admin, id).Error; err != nil {
@@ -148,14 +203,68 @@ func AdminUpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": admin})
 }
 
-// AdminDeleteUser deletes an admin user
+// AdminDeleteUser deletes a user
 func AdminDeleteUser(c *gin.Context) {
 	id := c.Param("id")
+	userType := c.Query("type")
+
+	if userType == "users" {
+		if err := config.DB.Delete(&models.User{}, id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+		return
+	}
+
 	if err := config.DB.Delete(&models.Admin{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+// AdminGetArchivedUsers fetches soft-deleted users
+func AdminGetArchivedUsers(c *gin.Context) {
+	userType := c.Query("type")
+
+	if userType == "users" {
+		var users []models.User
+		if err := config.DB.Unscoped().Where("deleted_at IS NOT NULL").Order("deleted_at desc").Find(&users).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch archived users"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": users})
+		return
+	}
+
+	var admins []models.Admin
+	if err := config.DB.Unscoped().Where("deleted_at IS NOT NULL").Order("deleted_at desc").Find(&admins).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch archived staff"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": admins})
+}
+
+// AdminRecoverUser restores a soft-deleted user
+func AdminRecoverUser(c *gin.Context) {
+	id := c.Param("id")
+	userType := c.Query("type")
+
+	if userType == "users" {
+		if err := config.DB.Unscoped().Model(&models.User{}).Where("id = ?", id).Update("deleted_at", nil).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to recover user account"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Account recovered successfully"})
+		return
+	}
+
+	if err := config.DB.Unscoped().Model(&models.Admin{}).Where("id = ?", id).Update("deleted_at", nil).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to recover staff account"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Account recovered successfully"})
 }
 
 // AdminGetAllRequests fetches all document requests, with optional status filter

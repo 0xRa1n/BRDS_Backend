@@ -37,15 +37,8 @@ func RegisterAdminRoutes(router *gin.Engine) {
 			usersGroup.DELETE("/:id", controllers.AdminDeleteUser)
 		}
 
-		// Portal Users
-		superAdminRoot.GET("/portal-users", controllers.AdminGetPortalUsers)
-		superAdminRoot.PUT("/portal-users/:id", controllers.AdminUpdatePortalUser)
-		superAdminRoot.DELETE("/portal-users/:id", controllers.AdminDeletePortalUser)
-
 		// Archives
-		superAdminRoot.GET("/archives/users", controllers.AdminGetArchivedAdmins)
-		superAdminRoot.POST("/archives/users/:id/recover", controllers.AdminRecoverAdmin)
-		superAdminRoot.GET("/archives/portal-users", controllers.AdminGetArchivedPortalUsers)
-		superAdminRoot.POST("/archives/portal-users/:id/recover", controllers.AdminRecoverPortalUser)
+		superAdminRoot.GET("/archives/users", controllers.AdminGetArchivedUsers)
+		superAdminRoot.POST("/archives/users/:id/recover", controllers.AdminRecoverUser)
 	}
 }
