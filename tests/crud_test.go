@@ -54,7 +54,7 @@ func TestCRUDOperations(t *testing.T) {
 			"date_of_birth": "1990-01-01",
 		}
 		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("PUT", "/api/v1/user/profile", bytes.NewBuffer(body))
+		req, _ := http.NewRequest("PUT", "/api/v1/users/profile", bytes.NewBuffer(body))
 		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 		req.Header.Set("Content-Type", "application/json")
 
@@ -73,8 +73,8 @@ func TestCRUDOperations(t *testing.T) {
 	})
 
 	// 2. Test Get Profile
-	t.Run("Get Profile", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v1/user/profile", nil)
+	t.Run("Get User Profile", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v1/users/profile", nil)
 		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 
 		w := httptest.NewRecorder()
@@ -96,7 +96,7 @@ func TestCRUDOperations(t *testing.T) {
 			"idempotency_key": "test_key_1",
 		}
 		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", "/api/v1/request", bytes.NewBuffer(body))
+		req, _ := http.NewRequest("POST", "/api/v1/requests", bytes.NewBuffer(body))
 		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 		req.Header.Set("Content-Type", "application/json")
 
@@ -115,8 +115,8 @@ func TestCRUDOperations(t *testing.T) {
 	})
 
 	// 4. Test Get Document Requests
-	t.Run("Get Requests", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v1/request", nil)
+	t.Run("Get User Requests", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v1/requests", nil)
 		req.AddCookie(&http.Cookie{Name: "jwt_token", Value: token})
 
 		w := httptest.NewRecorder()

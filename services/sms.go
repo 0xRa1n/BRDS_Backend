@@ -17,7 +17,6 @@ func SendSMS(to string, code string) error {
 
 	if accountSid == "" || authToken == "" {
 		log.Println("Twilio credentials not set, mocking SMS send")
-		log.Printf("MOCK SMS to %s: Your OTP is %s\n", to, code)
 		return nil
 	}
 
@@ -26,7 +25,7 @@ func SendSMS(to string, code string) error {
 	params := &openapi.CreateMessageParams{}
 	params.SetTo(to)
 	params.SetFrom(fromNumber)
-	params.SetBody(fmt.Sprintf("Your OTP code is: %s. It is valid for 5 minutes.", code))
+	params.SetBody(fmt.Sprintf("Your OTP code is: %s. This code is valid for only 5 minutes.", code))
 
 	_, err := client.Api.CreateMessage(params)
 	if err != nil {
